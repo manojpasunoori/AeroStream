@@ -1,0 +1,103 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: airline-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./infra/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - airline-network
+
+  flight-service:
+    build:
+      context: ./services/flight-service
+    container_name: flight-service
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mysql
+    networks:
+      - airline-network
+
+  crew-service:
+    build:
+      context: ./services/crew-service
+    container_name: crew-service
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mysql
+    networks:
+      - airline-network
+
+  delay-service:
+    build:
+      context: ./services/delay-service
+    container_name: delay-service
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    ports:
+      - "8083:8083"
+    depends_on:
+      - mysql
+    networks:
+      - airline-network
+
+  kpi-service:
+    build:
+      context: ./services/kpi-service
+    container_name: kpi-service
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    ports:
+      - "8084:8084"
+    depends_on:
+      - mysql
+    networks:
+      - airline-network
+
+  gateway:
+    build:
+      context: ./gateway
+    container_name: gateway
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - flight-service
+      - crew-service
+      - delay-service
+      - kpi-service
+    networks:
+      - airline-network
+
+volumes:
+  mysql-data:
+
+networks:
+  airline-network:
+    driver: bridge

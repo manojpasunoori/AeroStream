@@ -1,0 +1,23 @@
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.iml
+
+# Java / Maven
+**/target/
+**/*.log
+.mvn/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Gradle (if ever)
+.gradle/
+build/
+
+# Env / secrets
+.env
+
+# Node (if ever)
+node_modules/
+dist/
