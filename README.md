@@ -27,6 +27,8 @@ Delay tracking and categorization
 
 KPI storage and analytics
 
+Operational KPI snapshot endpoint (on-time %, delayed flights, avg delay)
+
 Distributed routing via API Gateway
 
 Observability via Prometheus & Grafana
@@ -173,6 +175,13 @@ http://localhost:8081/swagger-ui/index.html
 http://localhost:8082/swagger-ui/index.html
 http://localhost:8083/swagger-ui/index.html
 http://localhost:8084/swagger-ui/index.html
+
+Operational snapshot example:
+
+curl -H "X-API-KEY: <your_key>" \
+     "http://localhost:8080/api/kpis/operational-snapshot?onTimeThresholdMinutes=15"
+
+Threshold rules: `onTimeThresholdMinutes` must be between `0` and `300` (default `15`).
 
 OpenAPI spec:
 
