@@ -4,22 +4,33 @@ server:
 spring:
   application:
     name: gateway
+
   cloud:
     gateway:
+      default-filters:
+        # 1) Enforce API key at gateway (only if API_KEY env var is set)
+        - name: ApiKeyFilter
+
+        # 2) Add correlation id header for downstream services
+        - AddRequestHeader=X-Correlation-Id, #{T(java.util.UUID).randomUUID().toString()}
+
       routes:
-        - id: flight
+        - id: flight-service
           uri: http://flight-service:8081
           predicates:
             - Path=/api/flights/**
-        - id: crew
+
+        - id: crew-service
           uri: http://crew-service:8082
           predicates:
             - Path=/api/crew/**
-        - id: delays
+
+        - id: delay-service
           uri: http://delay-service:8083
           predicates:
             - Path=/api/delays/**
-        - id: kpis
+
+        - id: kpi-service
           uri: http://kpi-service:8084
           predicates:
             - Path=/api/kpis/**
@@ -28,4 +39,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always

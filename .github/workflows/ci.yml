@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+          cache: "maven"
+
+      - name: Build gateway
+        working-directory: gateway
+        run: mvn -B clean verify
+
+      - name: Build flight-service
+        working-directory: services/flight-service
+        run: mvn -B clean verify
+
+      - name: Build crew-service
+        working-directory: services/crew-service
+        run: mvn -B clean verify
+
+      - name: Build delay-service
+        working-directory: services/delay-service
+        run: mvn -B clean verify
+
+      - name: Build kpi-service
+        working-directory: services/kpi-service
+        run: mvn -B clean verify

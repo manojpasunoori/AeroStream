@@ -1,8 +1,9 @@
+version: "3.9"
+
 services:
   mysql:
     image: mysql:8.0
-    container_name: airline-mysql
-    restart: always
+    container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -11,80 +12,95 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - mysql-data:/var/lib/mysql
-      - ./infra/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data:/var/lib/mysql
+      - ./infra/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
-      - airline-network
+      - airline-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   flight-service:
-    build:
-      context: ./services/flight-service
+    build: ./services/flight-service
     container_name: flight-service
-    restart: always
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "8081:8081"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     networks:
-      - airline-network
+      - airline-net
 
   crew-service:
-    build:
-      context: ./services/crew-service
+    build: ./services/crew-service
     container_name: crew-service
-    restart: always
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "8082:8082"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     networks:
-      - airline-network
+      - airline-net
 
   delay-service:
-    build:
-      context: ./services/delay-service
+    build: ./services/delay-service
     container_name: delay-service
-    restart: always
     environment:
-      SPRING_DATASOURCE_URL: mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "8083:8083"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     networks:
-      - airline-network
+      - airline-net
 
   kpi-service:
-    build:
-      context: ./services/kpi-service
+    build: ./services/kpi-service
     container_name: kpi-service
-    restart: always
     environment:
-      SPRING_DATASOURCE_URL: mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "8084:8084"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     networks:
-      - airline-network
+      - airline-net
 
   gateway:
-    build:
-      context: ./gateway
+    build: ./gateway
     container_name: gateway
-    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      # Simple API-Key security (gateway enforced)
+      API_KEY: ${API_KEY}
     ports:
       - "8080:8080"
     depends_on:
@@ -93,11 +109,37 @@ services:
       - delay-service
       - kpi-service
     networks:
-      - airline-network
+      - airline-net
 
-volumes:
-  mysql-data:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./infra/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - airline-net
+    depends_on:
+      - gateway
+      - flight-service
+      - crew-service
+      - delay-service
+      - kpi-service
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - airline-net
+    depends_on:
+      - prometheus
 
 networks:
-  airline-network:
+  airline-net:
     driver: bridge
+
+volumes:
+  mysql_data:

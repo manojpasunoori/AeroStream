@@ -4,20 +4,34 @@ server:
 spring:
   application:
     name: flight-service
+
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/airline_ops?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
-    username: ${SPRING_DATASOURCE_USERNAME:airline_user}
-    password: ${SPRING_DATASOURCE_PASSWORD:airline_pass}
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:airline_ops}
+    username: ${MYSQL_USER:airline_user}
+    password: ${MYSQL_PASSWORD:airline_password}
+
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-    show-sql: true
+        format_sql: true
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  pattern:
+    level: "%5p [cid=%X{correlationId}]"
