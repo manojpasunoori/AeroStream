@@ -6,9 +6,9 @@ spring:
     name: delay-service
 
   datasource:
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:airline_ops}
-    username: ${MYSQL_USER:airline_user}
-    password: ${MYSQL_PASSWORD:airline_password}
+    url: jdbc:postgresql://postgres:5432/aerostream
+    username: aerostream
+    password: aerostream
 
   jpa:
     hibernate:

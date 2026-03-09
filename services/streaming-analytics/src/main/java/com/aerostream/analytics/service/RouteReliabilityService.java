@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class RouteReliabilityService {
 
     private final RouteReliabilityRepository repository;
+    private final RouteConfigurationService routeConfigurationService;
     private final Counter flightEventsProcessed;
     private final AtomicLong consumerLag = new AtomicLong(0);
     private final Timer serviceLatency;
@@ -26,10 +27,12 @@ public class RouteReliabilityService {
 
     public RouteReliabilityService(
             RouteReliabilityRepository repository,
+            RouteConfigurationService routeConfigurationService,
             MeterRegistry meterRegistry,
             RealtimeUpdateService realtimeUpdateService
     ) {
         this.repository = repository;
+        this.routeConfigurationService = routeConfigurationService;
         this.realtimeUpdateService = realtimeUpdateService;
         this.flightEventsProcessed = meterRegistry.counter("flight_events_processed");
         this.serviceLatency = meterRegistry.timer("service_latency");
@@ -37,6 +40,10 @@ public class RouteReliabilityService {
     }
 
     public void update(String route, RouteDelayAggregation aggregation) {
+        if (!routeConfigurationService.isRouteEnabled(route)) {
+            return;
+        }
+
         Timer.Sample sample = Timer.start();
         latestByRoute.put(route, aggregation);
 

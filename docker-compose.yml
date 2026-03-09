@@ -89,12 +89,12 @@ services:
       SCHEMA_REGISTRY_URL: http://schema-registry:8081
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: aerostream
+      POSTGRES_USER: aerostream
+      POSTGRES_PASSWORD: aerostream
       MONGO_HOST: mongo
       MONGO_PORT: 27017
-      MONGO_DB: ${MONGO_DB}
+      MONGO_DB: aerostream
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318/v1/traces
     ports:
       - "8086:8086"
@@ -106,18 +106,18 @@ services:
     networks:
       - airline-net
   postgres:
-    image: postgres:16
+    image: postgres:15
     container_name: postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: aerostream
+      POSTGRES_USER: aerostream
+      POSTGRES_PASSWORD: aerostream
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U aerostream -d aerostream"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -125,52 +125,26 @@ services:
       - airline-net
 
   mongo:
-    image: mongo:7
+    image: mongo:6
     container_name: mongo
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_DATABASE: ${MONGO_DB}
+      MONGO_INITDB_DATABASE: aerostream
     volumes:
       - mongo_data:/data/db
     networks:
       - airline-net
-
-  mysql:
-    image: mysql:8.0
-    container_name: mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./infra/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    networks:
-      - airline-net
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
 
   flight-service:
     build: ./services/flight-service
     container_name: flight-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      MYSQL_HOST: mysql
-      MYSQL_PORT: 3306
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "8081:8081"
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
     networks:
       - airline-net
@@ -180,15 +154,10 @@ services:
     container_name: crew-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      MYSQL_HOST: mysql
-      MYSQL_PORT: 3306
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "8082:8082"
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
     networks:
       - airline-net
@@ -198,15 +167,10 @@ services:
     container_name: delay-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      MYSQL_HOST: mysql
-      MYSQL_PORT: 3306
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "8083:8083"
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
     networks:
       - airline-net
@@ -216,15 +180,10 @@ services:
     container_name: kpi-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      MYSQL_HOST: mysql
-      MYSQL_PORT: 3306
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "8084:8084"
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
     networks:
       - airline-net
@@ -300,21 +259,5 @@ networks:
     driver: bridge
 
 volumes:
-  mysql_data:
   postgres_data:
   mongo_data:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
