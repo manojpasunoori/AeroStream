@@ -35,6 +35,10 @@ spring:
           predicates:
             - Path=/api/kpis/**
 
+        - id: streaming-analytics
+          uri: http://streaming-analytics:8086
+          predicates:
+            - Path=/api/analytics/**
 management:
   endpoints:
     web:
@@ -43,3 +47,5 @@ management:
   endpoint:
     health:
       show-details: always
+
+
