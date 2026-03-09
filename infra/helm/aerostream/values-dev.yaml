@@ -1,0 +1,12 @@
+namespace: aerostream-dev
+services:
+  gateway:
+    image: ghcr.io/manojpasunoori/aerostream-gateway:dev
+  ingestion:
+    image: ghcr.io/manojpasunoori/aerostream-ingestion-service:dev
+  simulator:
+    image: ghcr.io/manojpasunoori/aerostream-flight-simulator:dev
+  analytics:
+    image: ghcr.io/manojpasunoori/aerostream-streaming-analytics:dev
+  dashboard:
+    image: ghcr.io/manojpasunoori/aerostream-dashboard:dev

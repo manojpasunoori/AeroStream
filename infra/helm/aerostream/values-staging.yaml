@@ -1,0 +1,12 @@
+namespace: aerostream-staging
+services:
+  gateway:
+    image: ghcr.io/manojpasunoori/aerostream-gateway:staging
+  ingestion:
+    image: ghcr.io/manojpasunoori/aerostream-ingestion-service:staging
+  simulator:
+    image: ghcr.io/manojpasunoori/aerostream-flight-simulator:staging
+  analytics:
+    image: ghcr.io/manojpasunoori/aerostream-streaming-analytics:staging
+  dashboard:
+    image: ghcr.io/manojpasunoori/aerostream-dashboard:staging

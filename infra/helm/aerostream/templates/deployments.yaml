@@ -1,0 +1,33 @@
+{{- range $name, $cfg := .Values.services }}
+{{- if $cfg.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.namespace }}
+  labels:
+    app: {{ $name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+    spec:
+      containers:
+        - name: {{ $name }}
+          image: {{ $cfg.image }}
+          imagePullPolicy: {{ $.Values.imagePullPolicy }}
+          ports:
+            - containerPort: {{ $cfg.targetPort }}
+          env:
+{{- range $cfg.env }}
+            - name: {{ .name }}
+              value: "{{ .value }}"
+{{- end }}
+---
+{{- end }}
+{{- end }}

@@ -1,0 +1,55 @@
+namespace: aerostream
+imagePullPolicy: IfNotPresent
+
+services:
+  gateway:
+    enabled: true
+    image: ghcr.io/manojpasunoori/aerostream-gateway:latest
+    port: 8080
+    targetPort: 8080
+    env: []
+
+  ingestion:
+    enabled: true
+    image: ghcr.io/manojpasunoori/aerostream-ingestion-service:latest
+    port: 8090
+    targetPort: 8090
+    env:
+      - name: KAFKA_BOOTSTRAP_SERVERS
+        value: kafka:29092
+      - name: SCHEMA_REGISTRY_URL
+        value: http://schema-registry:8081
+
+  simulator:
+    enabled: true
+    image: ghcr.io/manojpasunoori/aerostream-flight-simulator:latest
+    port: 8091
+    targetPort: 8091
+    env:
+      - name: KAFKA_BOOTSTRAP_SERVERS
+        value: kafka:29092
+      - name: SCHEMA_REGISTRY_URL
+        value: http://schema-registry:8081
+
+  analytics:
+    enabled: true
+    image: ghcr.io/manojpasunoori/aerostream-streaming-analytics:latest
+    port: 8086
+    targetPort: 8086
+    env:
+      - name: KAFKA_BOOTSTRAP_SERVERS
+        value: kafka:29092
+      - name: SCHEMA_REGISTRY_URL
+        value: http://schema-registry:8081
+
+  dashboard:
+    enabled: true
+    image: ghcr.io/manojpasunoori/aerostream-dashboard:latest
+    port: 5173
+    targetPort: 80
+    env: []
+
+ingress:
+  enabled: false
+  className: nginx
+  host: aerostream.local
