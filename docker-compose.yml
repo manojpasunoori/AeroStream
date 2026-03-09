@@ -46,6 +46,19 @@ services:
     networks:
       - airline-net
 
+  flight-simulator:
+    build: ./services/flight-simulator
+    container_name: flight-simulator
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SIMULATOR_TOPIC: flight.events.v1
+      SIMULATOR_INTERVAL_SECONDS: 1
+    ports:
+      - "8091:8091"
+    depends_on:
+      - kafka
+    networks:
+      - airline-net
   postgres:
     image: postgres:16
     container_name: postgres
@@ -220,3 +233,6 @@ volumes:
   mysql_data:
   postgres_data:
   mongo_data:
+
+
+
