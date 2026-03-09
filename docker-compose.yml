@@ -51,12 +51,34 @@ services:
     container_name: flight-simulator
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      FLIGHT_EVENT_SCHEMA_PATH: /schemas/flight_event.avsc
       SIMULATOR_TOPIC: flight.events.v1
       SIMULATOR_INTERVAL_SECONDS: 1
     ports:
       - "8091:8091"
     depends_on:
       - kafka
+      - schema-registry
+    volumes:
+      - ./schemas:/schemas:ro
+    networks:
+      - airline-net
+  ingestion-service:
+    build: ./services/ingestion-service
+    container_name: ingestion-service
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      FLIGHT_EVENT_SCHEMA_PATH: /schemas/flight_event.avsc
+      INGESTION_TOPIC: flight.events.v1
+    ports:
+      - "8090:8090"
+    depends_on:
+      - kafka
+      - schema-registry
+    volumes:
+      - ./schemas:/schemas:ro
     networks:
       - airline-net
   postgres:
@@ -233,6 +255,9 @@ volumes:
   mysql_data:
   postgres_data:
   mongo_data:
+
+
+
 
 
 

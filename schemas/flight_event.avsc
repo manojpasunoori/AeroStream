@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "FlightEvent",
+  "namespace": "com.aerostream.events",
+  "doc": "Versioned flight operations event",
+  "fields": [
+    { "name": "event_version", "type": "string" },
+    { "name": "event_id", "type": "string" },
+    { "name": "event_time", "type": "string" },
+    { "name": "flight_id", "type": "string" },
+    { "name": "carrier", "type": "string" },
+    { "name": "origin", "type": "string" },
+    { "name": "destination", "type": "string" },
+    { "name": "delay_minutes", "type": "int" },
+    { "name": "event_type", "type": "string" },
+    {
+      "name": "metadata",
+      "type": {
+        "type": "map",
+        "values": "string"
+      }
+    }
+  ]
+}

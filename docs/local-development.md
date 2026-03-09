@@ -32,3 +32,6 @@
 
 - Existing Java domain services currently use MySQL and remain available for backward compatibility.
 - New event-driven analytics services introduced in later commits use Kafka, PostgreSQL, and MongoDB.
+- Ingestion Service: `http://localhost:8090`
+- Flight Simulator: `http://localhost:8091`
+- Schema Registry (host): `http://localhost:8085`

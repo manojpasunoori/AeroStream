@@ -1,24 +1,29 @@
 from __future__ import annotations
 
-import json
 import os
 import threading
 import time
+from pathlib import Path
 from typing import Optional
 
+from confluent_kafka import SerializingProducer
+from confluent_kafka.schema_registry import SchemaRegistryClient
+from confluent_kafka.schema_registry.avro import AvroSerializer
+from confluent_kafka.serialization import StringSerializer
 from fastapi import FastAPI
-from kafka import KafkaProducer
 from pydantic import BaseModel
 
 from app.scenarios import SCENARIOS, build_flight_event
 
 
 KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:29092")
+SCHEMA_REGISTRY_URL = os.getenv("SCHEMA_REGISTRY_URL", "http://schema-registry:8081")
 KAFKA_TOPIC = os.getenv("SIMULATOR_TOPIC", "flight.events.v1")
+SCHEMA_PATH = os.getenv("FLIGHT_EVENT_SCHEMA_PATH", "/schemas/flight_event.avsc")
 PUBLISH_INTERVAL_SECONDS = float(os.getenv("SIMULATOR_INTERVAL_SECONDS", "1.0"))
 
 
-app = FastAPI(title="AeroStream Flight Simulator", version="1.0.0")
+app = FastAPI(title="AeroStream Flight Simulator", version="1.1.0")
 
 
 class SimulationRequest(BaseModel):
@@ -30,15 +35,30 @@ _current_scenario = "clear"
 _lock = threading.Lock()
 
 
-def _producer() -> KafkaProducer:
-    return KafkaProducer(
-        bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
-        value_serializer=lambda value: json.dumps(value).encode("utf-8"),
+def _load_schema(schema_path: str) -> str:
+    return Path(schema_path).read_text(encoding="utf-8")
+
+
+def _producer() -> SerializingProducer:
+    schema_registry_client = SchemaRegistryClient({"url": SCHEMA_REGISTRY_URL})
+    schema_str = _load_schema(SCHEMA_PATH)
+
+    avro_serializer = AvroSerializer(
+        schema_registry_client=schema_registry_client,
+        schema_str=schema_str,
+        to_dict=lambda obj, ctx: obj,
     )
+
+    producer_config = {
+        "bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS,
+        "key.serializer": StringSerializer("utf_8"),
+        "value.serializer": avro_serializer,
+    }
+    return SerializingProducer(producer_config)
 
 
 def _publish_loop() -> None:
-    producer: Optional[KafkaProducer] = None
+    producer: Optional[SerializingProducer] = None
     while True:
         with _lock:
             if not _running:
@@ -49,15 +69,15 @@ def _publish_loop() -> None:
             if producer is None:
                 producer = _producer()
             event = build_flight_event(scenario)
-            producer.send(KAFKA_TOPIC, event)
-            producer.flush(timeout=2)
+            producer.produce(topic=KAFKA_TOPIC, key=event["flight_id"], value=event)
+            producer.poll(0)
         except Exception:
             # keep the simulator running to recover from transient broker outages
             time.sleep(2)
         time.sleep(PUBLISH_INTERVAL_SECONDS)
 
     if producer is not None:
-        producer.close()
+        producer.flush(5)
 
 
 @app.get("/health")

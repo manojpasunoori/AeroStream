@@ -52,8 +52,9 @@ def build_flight_event(scenario_name: str) -> dict:
         "event_type": event_type,
         "metadata": {
             "scenario": scenario_name,
-            "storm": storm_flag,
-            "congestion": congestion_flag,
-            "cascading_likelihood": scenario.cascade_factor,
+            "storm": str(storm_flag).lower(),
+            "congestion": str(congestion_flag).lower(),
+            "cascading_likelihood": str(scenario.cascade_factor),
         },
     }
+
