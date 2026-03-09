@@ -1,0 +1,65 @@
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(135deg, #f4f8fb, #dbe9f6);
+  color: #0d1c2f;
+}
+
+.app {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+h1 {
+  margin: 0;
+}
+
+.status {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #d9e4f5;
+  font-weight: 600;
+}
+
+.status.connected {
+  background: #bdecc8;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.cards article {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+th,
+td {
+  padding: 10px;
+  border-bottom: 1px solid #edf2f7;
+  text-align: left;
+}

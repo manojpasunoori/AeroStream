@@ -246,6 +246,15 @@ services:
     networks:
       - airline-net
 
+  dashboard:
+    build: ./dashboard
+    container_name: dashboard
+    ports:
+      - "5173:80"
+    depends_on:
+      - gateway
+    networks:
+      - airline-net
   otel-collector:
     image: otel/opentelemetry-collector:0.109.0
     container_name: otel-collector
@@ -294,6 +303,7 @@ volumes:
   mysql_data:
   postgres_data:
   mongo_data:
+
 
 
 

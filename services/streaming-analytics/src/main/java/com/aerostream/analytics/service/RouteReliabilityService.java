@@ -2,6 +2,7 @@ package com.aerostream.analytics.service;
 
 import com.aerostream.analytics.model.RouteDelayAggregation;
 import com.aerostream.analytics.model.RouteReliabilityEntity;
+import com.aerostream.analytics.realtime.RealtimeUpdateService;
 import com.aerostream.analytics.repository.RouteReliabilityRepository;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
@@ -20,10 +21,16 @@ public class RouteReliabilityService {
     private final Counter flightEventsProcessed;
     private final AtomicLong consumerLag = new AtomicLong(0);
     private final Timer serviceLatency;
+    private final RealtimeUpdateService realtimeUpdateService;
     private final Map<String, RouteDelayAggregation> latestByRoute = new ConcurrentHashMap<>();
 
-    public RouteReliabilityService(RouteReliabilityRepository repository, MeterRegistry meterRegistry) {
+    public RouteReliabilityService(
+            RouteReliabilityRepository repository,
+            MeterRegistry meterRegistry,
+            RealtimeUpdateService realtimeUpdateService
+    ) {
         this.repository = repository;
+        this.realtimeUpdateService = realtimeUpdateService;
         this.flightEventsProcessed = meterRegistry.counter("flight_events_processed");
         this.serviceLatency = meterRegistry.timer("service_latency");
         Gauge.builder("consumer_lag", consumerLag, AtomicLong::get).register(meterRegistry);
@@ -41,6 +48,7 @@ public class RouteReliabilityService {
         repository.save(entity);
 
         flightEventsProcessed.increment();
+        realtimeUpdateService.publish(route, aggregation);
         sample.stop(serviceLatency);
     }
 
