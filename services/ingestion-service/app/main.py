@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import time
 from pathlib import Path
+from typing import Optional
 
 from confluent_kafka import SerializingProducer
 from confluent_kafka.schema_registry import SchemaRegistryClient
@@ -38,9 +39,22 @@ class FlightEvent(BaseModel):
 app = FastAPI(title="AeroStream Ingestion Service", version="1.1.0")
 
 
+def _resolve_schema_path() -> Path:
+    configured = Path(SCHEMA_PATH)
+    if configured.exists():
+        return configured
+
+    repo_root_schema = Path(__file__).resolve().parents[3] / "schemas" / "flight-event.avsc"
+    if repo_root_schema.exists():
+        return repo_root_schema
+
+    # Keep original path if not found so runtime error points to configured location.
+    return configured
+
+
 def _producer() -> SerializingProducer:
     schema_registry_client = SchemaRegistryClient({"url": SCHEMA_REGISTRY_URL})
-    schema_str = Path(SCHEMA_PATH).read_text(encoding="utf-8")
+    schema_str = _resolve_schema_path().read_text(encoding="utf-8")
     avro_serializer = AvroSerializer(
         schema_registry_client=schema_registry_client,
         schema_str=schema_str,
@@ -55,7 +69,14 @@ def _producer() -> SerializingProducer:
     )
 
 
-producer = _producer()
+_producer_instance: Optional[SerializingProducer] = None
+
+
+def _get_producer() -> SerializingProducer:
+    global _producer_instance
+    if _producer_instance is None:
+        _producer_instance = _producer()
+    return _producer_instance
 
 
 @app.get("/health")
@@ -72,6 +93,7 @@ def metrics() -> Response:
 def ingest_flight_event(event: FlightEvent) -> dict:
     start = time.perf_counter()
     payload = event.model_dump()
+    producer = _get_producer()
     producer.produce(topic=KAFKA_TOPIC, key=payload["flightId"], value=payload)
     producer.poll(0)
     producer.flush(5)
