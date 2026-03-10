@@ -213,7 +213,7 @@ export function App() {
                       <td>{flight.receivedAt}</td>
                       <td>{flight.flightCode}</td>
                       <td>
-                        {flight.origin} -> {flight.destination}
+                        {flight.origin} {" -> "} {flight.destination}
                       </td>
                       <td>{flight.delayMinutes.toFixed(1)}m</td>
                       <td>
