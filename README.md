@@ -36,6 +36,7 @@ AeroStream uses Kafka as the event backbone for near-real-time processing:
 - Broker: Kafka receives and persists the event stream.
 - Consumer: `services/streaming-analytics` consumes from `flight-events` with Spring Kafka (`spring-kafka`).
 - Bootstrap servers: `spring.kafka.bootstrap-servers=kafka:9092`.
+
 ## Event Flow
 
 1. Flight events are produced by FAA/OpenSky connectors or the simulator.
@@ -45,6 +46,13 @@ AeroStream uses Kafka as the event backbone for near-real-time processing:
 5. Route configuration is read from MongoDB.
 6. Dashboard renders live route metrics.
 7. Prometheus and Grafana expose operational health and performance.
+
+## Observability Stack
+
+- Micrometer metrics are enabled in all Spring Boot services.
+- Prometheus scrapes Spring services via `/actuator/prometheus` and Python services via `/metrics`.
+- Grafana dashboards are provisioned from `infra/observability/grafana/dashboards`.
+- Gateway security explicitly allows `GET /actuator/prometheus` for Prometheus scraping.
 
 ## Infrastructure Design
 

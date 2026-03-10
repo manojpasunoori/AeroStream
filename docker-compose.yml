@@ -245,6 +245,9 @@ services:
       - crew-service
       - delay-service
       - kpi-service
+      - streaming-analytics
+      - ingestion-service
+      - flight-simulator
 
   grafana:
     image: grafana/grafana:latest

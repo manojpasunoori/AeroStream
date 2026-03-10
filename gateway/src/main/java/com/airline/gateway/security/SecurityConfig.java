@@ -24,6 +24,7 @@ public class SecurityConfig {
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .pathMatchers("/actuator/health").permitAll()
+                        .pathMatchers("/actuator/prometheus").permitAll()
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
