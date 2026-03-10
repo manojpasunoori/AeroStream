@@ -1,0 +1,21 @@
+type Query {
+  flightStatus(flightId: ID!): FlightStatus
+  routePerformance(route: String!): RoutePerformance
+  reliabilityScore(route: String!): Float
+}
+
+type FlightStatus {
+  flightId: ID
+  flightNumber: String
+  origin: String
+  destination: String
+  status: String
+}
+
+type RoutePerformance {
+  route: String
+  eventCount: Int
+  delayedFlights: Int
+  averageDelay: Float
+  reliabilityScore: Float
+}

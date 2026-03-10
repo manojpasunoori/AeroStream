@@ -5,6 +5,9 @@ spring:
   application:
     name: gateway
 
+  graphql:
+    path: /graphql
+
   cloud:
     gateway:
       default-filters:
