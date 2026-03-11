@@ -1,44 +1,35 @@
 server:
   port: 8080
-
 spring:
   application:
     name: gateway
-
   graphql:
     path: /graphql
-
   cloud:
     gateway:
       default-filters:
-        - AddRequestHeader=X-Correlation-Id, #{T(java.util.UUID).randomUUID().toString()}
-
+        - AddRequestHeader=X-Correlation-Id, default-correlation-id
       routes:
         - id: flight-service
           uri: http://flight-service:8081
           predicates:
             - Path=/api/flights/**
-
         - id: crew-service
           uri: http://crew-service:8082
           predicates:
             - Path=/api/crew/**
-
         - id: delay-service
           uri: http://delay-service:8083
           predicates:
             - Path=/api/delays/**
-
         - id: kpi-service
           uri: http://kpi-service:8084
           predicates:
             - Path=/api/kpis/**
-
         - id: streaming-analytics
           uri: http://streaming-analytics:8086
           predicates:
             - Path=/api/analytics/**
-
 security:
   jwt:
     secret: ${JWT_SECRET:change-me-to-a-long-secret-key-at-least-32-bytes}
@@ -46,7 +37,6 @@ security:
   auth:
     username: ${AUTH_USERNAME:admin}
     password: ${AUTH_PASSWORD:admin123}
-
 management:
   endpoints:
     web:
